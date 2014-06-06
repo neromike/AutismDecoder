@@ -1,0 +1,952 @@
+<!doctype html>
+<html>
+<head>
+	<title>Autism Decoder</title>
+	<meta charset="utf-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0 maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<script type="text/javascript" src="jquery-2.0.3.min.js"></script>
+	<script type="text/javascript" src="iscroll.js"></script>
+	<script>
+	var myScroll;
+	function loaded () { myScroll = new IScroll('#wrapper', { mouseWheel: true }); }
+	</script>
+</head>
+<style>
+* {
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: -moz-none;
+	-o-user-select: none;
+	user-select: none;
+}
+html, body, div, span, object, iframe, p, blockquote, pre, a, abbr, address, cite, code, del, dfn, em,
+img, ins, kbd, q, samp, small, strong, sub, sup, var, b, i, hr,
+dl, dt, dd, ol, ul, li, fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, figure, figcaption, hgroup,
+menu, footer, header, nav, section, summary, time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+a, img { border: 0; }
+body {
+	font: 16px/24px Georgia, serif;
+	background-image:url("img/bg.jpg");
+	background-color: grey;
+	background-repeat: no-repeat;
+	-webkit-touch-callout: none;		/* prevent callout to copy image, etc when tap to hold */
+	-webkit-text-size-adjust: none;		/* prevent webkit from resizing text to fit */
+	-webkit-user-select: none;			/* prevent copy paste, to allow, change 'none' to 'text' */
+	height:100%;
+	width:100%;
+}
+#mainWrapper {
+	position: absolute;
+	width: 1024px;
+	height: 768px;
+	overflow: hidden;
+}
+</style>
+<script>
+if ('ontouchstart' in window) {
+	var user_event = "touchstart";
+} else {
+	var user_event = "click";
+}
+var URL_path = "http://readingroom.mindspec.org/responsive2/server/";
+var server_path = "server/";
+var curr_cat = "featured";
+var recent_name = "All Research";
+var navStatus = "hide";
+var curr_story_box = 0;
+var leftnav_speed = 300;
+var toggleLeftNav = function() {
+	if (navStatus == "hide") {
+		$('#left_nav_container').animate({left:'0px'}, leftnav_speed, function() {} );
+		navStatus = "show";
+	} else {
+		$('#left_nav_container').animate({left:'-200px'}, leftnav_speed, function() {} );
+		navStatus = "hide";
+	}
+}
+</script>
+<body>
+	<div id="mainWrapper">
+		
+		
+		
+		<style>
+		#dim_back {
+			display: none;
+			position: fixed;
+			width: 100%;
+			height: 100%;
+			background-color: black;
+			opacity: 0.8;
+			z-index: 500;
+		}
+		</style>
+		<div id="dim_back"></div>
+		
+		
+		
+		<style>
+		#modal_about {
+			display: none;
+			position: absolute;
+			top: -480px;
+			width: 650px;
+			height: 430px;
+			padding: 20px;
+			margin-left: auto;
+			margin-right: auto;
+			left: 0px;
+			right: 0px;
+			background-color: white;
+			color: black;
+			z-index: 510;
+			border-radius: 10px;
+			border: inset 4px #528286;
+			font-size: 14px;
+			font-family: Arial, sans-serif;
+		}
+		#about_us_disclaimer {
+			font-style: italic;
+			font-size: 12px;
+		}
+		#about_us_close {
+			position: absolute;
+			top: -36px;
+			right: 0px;
+			font-weight: bold;
+			color: white;
+			font-size: 17px;
+			padding: 10px;
+			padding-bottom: 0px;
+			cursor: pointer;
+		}
+		#about_us_close_button {
+			position: absolute;
+			right: 50px;
+			bottom: 20px;
+			padding: 6px;
+			border-radius: 10px;
+			border: inset 1px grey;
+			background-color: #E9E9E9;
+			width: 100px;
+			text-align: center;
+		}
+		</style>
+		<div id="modal_about">
+			<div id="about_us_close">close</div>
+			<h1>About Us</h1>
+			MindSpec is a not-for-profit organization established to accelerate autism research. <span class="about_us_extra">We develop new tools to integrate research information about autism from diverse scientific disciplines.
+			<br /><br /></span>
+			The goal of our <strong>Autism Decoder</strong> App is to provide relevant, up-to-date information for the entire autism community, including parents, caregivers, researchers, clinicians, and anyone interested in autism. <span class="about_us_extra">We aim to summarize recent research studies across a wide range of subjects, from animal studies to therapeutic strategies. Our writing/editorial staff consists of an interdisciplinary team of scientific experts who are supported by an experienced IT staff.</span>
+			<br /><br />
+			<div id="about_us_disclaimer">Please note, no information presented in this App should be construed as medical advice. You should contact a medical professional with all health or treatment related questions.</div>
+			<br /><br />
+			<div id="about_us_close_button">Close</div>
+		</div>
+		<script>
+		$('#about_us_close').on(user_event, function() { modal_about_close(); } );
+		$('#about_us_close_button').on(user_event, function() { modal_about_close(); } );
+		var modal_about_speed = 500;
+		var modal_about_open = function() {
+			$('#dim_back').css('opacity', '0');
+			$('#dim_back').show();
+			$('#dim_back').animate({opacity:0.8}, modal_about_speed, function() {
+			});
+			
+			$('#modal_about').show();
+			$('#modal_about').animate({top:'50px'}, modal_about_speed, function() { } );
+		}
+		var modal_about_close = function() {
+			$('#dim_back').animate({opacity:0}, modal_about_speed, function() {
+				$('#dim_back').hide();
+			});
+			$('#modal_about').animate({top:'-480px'}, modal_about_speed, function() {
+				$('#modal_about').hide();
+			});
+		}
+		</script>
+		
+		
+		
+		<style>
+		#update_screen {
+			position: absolute;
+			top: 0px;
+			left: 0px;
+			width: 100%;
+			height: 100%;
+			background-color: white;
+			z-index: 200;
+			background-image: url('img/splash_landscape.jpg');
+		}
+		#update_loading {
+			position: absolute;
+			top: 400px;
+			left: 170px;
+		}
+		#html_loader { display: none; }
+		.img_cache { display: none; }
+		#update_notification_container {
+			position: absolute;
+			top: -55px;
+			width: 100%;
+			text-align: center;
+		}
+		#update_notification {
+			margin: 0 auto;
+			width: 250px;
+			text-align: center;
+			border-bottom-left-radius: 10px;
+			border-bottom-right-radius: 10px;
+			background-color: #FFF;
+			font-family: arial, sans-serif;
+			font-size: 14px;
+			padding-top: 30px;
+		}
+		</style>
+		<img src="img/splash_landscape.jpg" class="img_cache" />
+		<img src="img/splash_portrait.jpg" class="img_cache" />
+		<div id="update_screen">
+			<img id="update_loading" src="img/loading.gif" />
+			<div id="html_loader"></div>
+		</div>
+		<div id="update_notification_container">
+			<div id="update_notification">New research stories added!</div>
+		</div>
+		<script>
+		var cat_list = new Array();
+		var cat_pic = new Array();
+		cat_list[0] = "Therapy";
+		cat_pic[0] = "cat_therapy";
+		cat_list[1] = "Diagnosis";
+		cat_pic[1] = "cat_diag";
+		cat_list[2] = "Genetics";
+		cat_pic[2] = "cat_genet";
+		cat_list[3] = "Environment";
+		cat_pic[3] = "cat_environ";
+		cat_list[4] = "Life with Autism";
+		cat_pic[4] = "cat_life_combined";
+		cat_list[5] = "Brain Research";
+		cat_pic[5] = "cat_brain_combined";
+		cat_list[6] = "Biomarkers";
+		cat_pic[6] = "cat_biomark";
+		cat_list[7] = "Animal Model";
+		cat_pic[7] = "cat_animal";
+		/*
+		cat_list[4] = "Statistics";
+		cat_pic[4] = "cat_stats";
+		cat_list[5] = "Life with Autism";
+		cat_pic[5] = "cat_life";
+		cat_list[6] = "Brain Research";
+		cat_pic[6] = "cat_brain";
+		cat_list[7] = "Brain Imaging";
+		cat_pic[7] = "cat_brain_img";
+		cat_list[1] = "Advocacy";
+		cat_pic[1] = "cat_advoc";
+		cat_list[10] = "Stem Cells";
+		cat_pic[10] = "cat_stem";
+		*/
+		
+		var stories_loaded = 0;
+		var check_loaded;	//timer to check if all stories are loaded
+		var update_needed = true;
+		
+		var start_app = function() {
+			$('#update_screen').hide();
+			
+			//show featured news items by default, create the boxes and fill them in
+			$('#left_side_content').html( localStorage['featured0'] );
+			for (var this_box_num=0; this_box_num < localStorage['featured_num']; this_box_num=this_box_num+1) {
+				$('#CatButtons').append('<button class="box" id="box' + this_box_num + '"><div class="box_content" id="box' + this_box_num + '_content">' + localStorage["featured" + this_box_num] + '</div></button>');
+			}
+			
+			$('#box0').toggleClass("box_selected");
+			
+			//reinitialize iscroll since content has dynamically been created
+			myScroll.destroy();
+			myScroll = null;
+			loaded();
+			
+			//show update notification if update was needed
+			if (update_needed) {
+				$('#update_notification_container').animate({top:'0px'}, 500, function() {} ).delay(2000).animate({top:'-55px'}, 500, function() {} );
+			}
+			
+		}
+		
+		var check_if_done_loading = function() {
+			console.log(stories_loaded + ' / ' + localStorage.totalStories);
+			if (stories_loaded == localStorage.totalStories) {
+				clearInterval(check_loaded);
+				start_app();
+			}
+		}
+		var set_cat_story = function(which_story) {
+			stories_loaded = stories_loaded + 1;
+			localStorage[which_story] = $('#html_loader').html();
+			//console.log(stories_loaded + "   " + which_story);
+		}
+		var load_story = function(which_story) { $('#html_loader').load(URL_path + which_story + '.html', function() { set_cat_story(which_story); }); }
+		var set_cat_num = function(which_cat) {
+			//set the number
+			localStorage[which_cat + '_num'] = $('#html_loader').html();
+			
+			//then load the stories
+			for (var i=0; i<localStorage[which_cat + '_num']; i++) {
+				this_story = which_cat + i;
+				load_story(this_story);
+			}
+		}
+		var load_num_in_cat = function(which_cat) { $('#html_loader').load(URL_path + which_cat + '_num' + '.html', function() { set_cat_num(which_cat); }); }
+		var set_total_num = function() {
+			//console.log( $('#html_loader').html() );
+			if ($('#html_loader').html() == localStorage.totalStories) {
+				update_needed = false;
+			} else {
+				localStorage.clear();
+				localStorage.totalStories = $('#html_loader').html();
+			}
+		}
+		var load_news = function() {
+			//check if internet available
+			if (navigator.onLine) {
+				
+				//get the total number of stories
+				$('#html_loader').load(URL_path + 'story_count.html', function() {
+					set_total_num();
+					if (update_needed) {
+						check_loaded = setInterval(function(){ check_if_done_loading(); }, 1000);		//start check for when update is complete once we have the final number
+					
+						//get the numbers of each category, then the stories
+						load_num_in_cat('featured');
+						for (var i=0; i<cat_pic.length; i++) {
+							load_num_in_cat(cat_pic[i]);
+						}
+					} else {
+						start_app();	//stories already loaded
+					}
+				});
+				
+			} else {
+				start_app();	//assumes we've loaded stories at some point
+			}
+			
+		}
+		
+		$( document ).ready(function() {
+			if (typeof(Storage)!=="undefined") {
+				//console.log('storage supported');
+				load_news();
+			} else {
+				console.log('storage not supported');
+			}
+			loaded();
+		});
+		</script>
+		
+		
+		
+		<style>
+		#logo_img {
+			padding-left: 80px;
+			padding-top: 20px;
+		}
+		#logo_powered {
+			position: absolute;
+			right: 0px;
+			top: 13px;
+		}
+		#header_current_category {
+			position: absolute;
+			top: 88px;
+			left: 415px;
+			text-align: center;
+			width: 281px;
+		}
+		.header_text {
+			font-weight: bold;
+			color: #FFF;
+			text-shadow: 0 0 0.2em black, 0 0 0.2em black, 0 0 0.2em black;
+		}
+		</style>
+		<img src="img/header3.png" id="logo_img" draggable="false" />
+		<a href="http://www.mindspec.org/" target="_system" id="logo_powered">
+            <img src="img/logo_powered.png" draggable="false" />
+        </a>
+		<div id="header_current_category" class="header_text"></div>
+		<script>
+		$('#header_current_category').html(recent_name);
+		</script>
+		
+		
+		
+		<style>
+		#left_nav_container {
+			position: absolute;
+			left: -200px;
+			top: 0px;
+			height: 768px;
+			width: 10%;
+			z-index: 10;
+		}
+		#navImg {
+			padding: 0px;
+			margin: 0px;
+		}
+		#left_nav_content {
+			position: absolute;
+			left: 0px;
+			bottom: 0px;
+			width: 200px;
+			height: 100%;
+			text-align: center;
+		}
+		#left_nav_content table { width: 199px; }
+		#left_nav_content td { padding-bottom: 20px; }
+		#left_nav_content button {
+			width: 92px;
+			padding: 5px;
+			border-radius: 10px;
+			background-color: #CCC;
+		}
+		#left_nav_content #featured_button { width: 120px; }
+		#left_nav_content button { font-size: 11px; }
+		#news_category_title {
+			font-size: 17px;
+			font-weight: bold;
+			padding-top: 30px;
+			padding-bottom: 30px;
+			color: white;
+		}
+		.cat_img {
+			width: 50px;
+			display: block;
+			margin-left: auto;
+			margin-right: auto;
+		}
+		#cat_recent {
+			font-size: 13px !important;
+			line-height: 19px;
+			font-weight: bold;
+			text-shadow: white 0.1em 0.1em 0.1em;
+			padding: 5px;
+			width: 117px !important;
+			margin-bottom: 35px;
+		}
+		</style>
+		<div id="left_nav_container"><!--left_nav_container-->
+			<img src="img/leftNav.png" usemap="#leftNavMap" id="navImg" />
+			<script>
+			$('#navImg').on(user_event, function(e) {
+				if (user_event == 'touchstart') {
+					var touch = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+					var this_x = touch.screenX;
+					var this_y = touch.screenY;
+				} else {
+					var this_x = e.screenX;
+					var this_y = e.screenY;
+				}
+				if (this_y < 250) {
+					if (navStatus == "hide") {
+						toggleLeftNav();
+					} else {
+						if (this_x > 225) { toggleLeftNav(); }
+					}
+				}
+			});
+			</script>
+			<div id="left_nav_content">
+				<div id="news_category_title">Research Categories</div>
+				<button id="cat_recent"></button>
+				<table>
+					<script>
+					var num_in_row = 0
+					for (var i=0; i<cat_list.length; i++) {
+						num_in_row = num_in_row + 1;
+						if (num_in_row == 1) { document.write("<tr>"); }
+						document.write("	<td>");
+						document.write("<button id='" + cat_list[i] + "," + cat_pic[i] + "' class='cat_button'>");
+						if (cat_pic[i] == 'cat_therapy') {
+							document.write("<img src='img/" + cat_pic[i] + ".png' class='cat_img' draggable='false' />");
+						} else {
+							document.write("<img src='img/" + cat_pic[i] + ".svg' class='cat_img' draggable='false' />");
+						}
+						//document.write("<br />");
+						document.write( cat_list[i] );
+						document.write("</button>");
+						document.write("</td>");
+						if (num_in_row == 2) { document.write("</tr>"); num_in_row = 0; }
+					}
+					$('#cat_recent').html(recent_name);
+					$('#cat_recent').on(user_event, function() {
+						changeCategory( recent_name, 'featured' );
+					});
+					$('.cat_button').on(user_event, function() {
+						var this_cat = $(this).attr('id').split(",")[0];
+						var this_cat_ID = $(this).attr('id').split(",")[1];
+						changeCategory( this_cat, this_cat_ID );
+					});
+					</script>
+					<tr>
+						<td colspan="2" style="padding-top:20px;">
+							<button id="cat_button_about" class="cat_button" style="font-size:14px;padding:10px;font-weight:bold;">About Us</button>
+							<script>
+							$('#cat_button_about').on(user_event, function() {
+								toggleLeftNav();
+								modal_about_open();
+							});
+							</script>
+						</td>
+					</tr>
+				</table>
+			</div><!--left_nav_content-->
+		</div><!--left_nav_container-->
+		<script>
+		var changeCategory = function (new_category, new_cat_ID) {
+			curr_cat = new_cat_ID;
+			
+			$('#box' + curr_story_box).toggleClass("box_selected");
+			
+			document.getElementById("header_current_category").innerHTML = new_category;	//change the header
+			reset_news_pos();	//reset position
+			$('#left_side_content').html( localStorage[curr_cat + '0'] );	//change the news story shown to the first one of the new category
+			
+			//update the boxes
+			$('#CatButtons').html(' ');
+			for (var this_box_num=0; this_box_num < localStorage[curr_cat + '_num']; this_box_num=this_box_num+1) {
+				$('#CatButtons').append('<button class="box" id="box' + this_box_num + '"><div class="box_content" id="box' + this_box_num + '_content">' + localStorage[curr_cat + this_box_num] + '</div></button>');
+			}
+			
+			curr_story_box = 0;
+			$('#box' + curr_story_box).toggleClass("box_selected");
+			
+			//reinitialize iscroll since content has dynamically been created
+			myScroll.destroy();
+			myScroll = null;
+			loaded();
+			
+			toggleLeftNav();	//hide the left navigation window after a new one is selected
+		}
+		</script>
+		
+		
+		
+		<style>
+		#left_side_container {
+			background-color: #FFFFFF;
+			color: #000000;
+			font-size: 15px;
+			font-weight: normal;
+			/*padding: 15px;*/
+			margin-left: 7px;
+			border-radius: 5px;
+			width: 700px;
+			height: 620px;	/* set in CSS */
+			position: absolute;
+			top: 140px;
+			overflow: hidden;
+		}
+		#left_side_content {
+			border-bottom: dashed 1px #DDD;
+			border-left: dashed 1px #DDD;
+			border-right: dashed 1px #DDD;
+			
+			position: absolute;
+			top: 10px;	/* set in CSS */
+			left: 10px;	/* set in CSS */
+			width: 680px;
+		}
+		#left_side_content .item_num { display: none; }
+		#left_side_content .item_img img {
+			width: 300px;
+			height: auto;
+			float: left;
+			padding-right: 15px;
+			pointer-events: none;
+		}
+		#left_side_content .item_title {
+			background-image: linear-gradient(bottom, rgb(36,36,36) 0%, rgb(146,147,148) 73%);
+			background-image: -o-linear-gradient(bottom, rgb(36,36,36) 0%, rgb(146,147,148) 73%);
+			background-image: -moz-linear-gradient(bottom, rgb(36,36,36) 0%, rgb(146,147,148) 73%);
+			background-image: -webkit-linear-gradient(bottom, rgb(36,36,36) 0%, rgb(146,147,148) 73%);
+			background-image: -ms-linear-gradient(bottom, rgb(36,36,36) 0%, rgb(146,147,148) 73%);
+			background-image: -webkit-gradient (
+				linear,
+				left bottom,
+				left top,
+				color-stop(0, rgb(36,36,36)),
+				color-stop(0.73, rgb(146,147,148))
+			);
+			color: white;
+			font-size:20px;
+			font-weight: bold;
+			padding: 10px;
+		}
+		#left_side_content .item_author_container {
+			display: inline;
+			font-size: 12px;
+		}
+		#left_side_content .item_author {
+			font-weight: bold;
+			display: inline;
+		}
+		#left_side_content .item_date_container {
+			color: #666;
+			font-size: 11px;
+			line-height: 11px;
+			padding-bottom: 10px;
+		}
+		#left_side_content .item_date {
+			display: inline;
+		}
+		#left_side_content .item_short_date {
+			display: none;
+		}
+		#left_side_content .item_blurb {
+			padding-left: 5px;
+			padding-right: 5px;
+			/* padding-bottom: 40px; */
+		}
+		#left_side_content .item_blurb p {
+			margin-top: 10px;
+		}
+		#left_side_content .item_blurb .src_img {
+			width: 50px;
+			vertical-align: middle;
+			padding-right: 10px;
+		}
+		#left_side_content .item_blurb table {
+			width: 100%;
+			text-align: right;
+		}
+		#left_side_content .item_blurb hr {
+			height:2px;
+			background-color:#e2e2e2;
+		}
+		</style>
+		<div id="left_side_container">
+			<div id="left_side_content"></div>
+		</div>
+		<script>
+		var content_container_height = 620;
+		$('#left_side_container').css('height', content_container_height + 'px');
+		var left_side_content_top_default = 10;
+		var left_side_content_top = left_side_content_top_default;
+		$('#left_side_content').css('top', left_side_content_top_default + 'px');
+		var left_side_content_left_default = 10;
+		var left_side_content_left = left_side_content_left_default;
+		$('#left_side_content').css('left', left_side_content_left_default + 'px');
+		var next_story_thresh = 150;
+		var switching_story = false;
+		
+		var touch_start_x, touch_start_y;
+		var switch_story = false;
+		
+		var mouse_down = false;
+		
+		var handle_touch_start = function(e, this_elem) {
+			if (user_event == 'touchstart') {
+				var touch = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+				touch_start_x = touch.screenX;
+				touch_start_y = touch.screenY;
+			} else {
+				touch_start_x = e.screenX;
+				touch_start_y = e.screenY;
+				mouse_down = true;
+			}
+			//console.log('start', touch_start_x, touch_start_y);
+		};
+		var handle_touch_move = function(e, this_elem) {
+			if (user_event == 'touchstart') {
+				var touch = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+				var this_x = touch.screenX;
+				var this_y = touch.screenY;
+			} else {
+				if (!mouse_down) { return }
+				var this_x = e.screenX;
+				var this_y = e.screenY;
+			}
+			var this_dist_x = this_x - touch_start_x;
+			var this_dist_y = this_y - touch_start_y;
+			//console.log('move', this_x, this_y, this_dist_y);
+			
+			if (this_elem == 'left_side_container') {
+				if ( (this_dist_y != 0) && (Math.abs(this_dist_y) > Math.abs(this_dist_x)) ){
+					var left_side_top = parseInt( $('#left_side_content').css('top') );
+					var content_height = parseInt( $('#left_side_content').css('height') );
+					left_side_top = left_side_content_top + this_dist_y;
+					if (left_side_top > left_side_content_top_default) { left_side_top = left_side_content_top_default; }	//no scrolling up past top
+					if (left_side_top < (content_container_height - left_side_content_top_default - content_height)) { left_side_top = (content_container_height - left_side_content_top_default - content_height); };
+					$('#left_side_content').css('top', left_side_top + 'px');
+				};
+				if ( (this_dist_x != 0) && (Math.abs(this_dist_x) > Math.abs(this_dist_y)) ){
+					if ( (Math.abs(this_dist_x) > next_story_thresh) && (!switching_story) ) {
+						switch_story = true;
+						switching_story = true;
+						
+						var last_story_box = curr_story_box;
+						if (this_dist_x < 0) {
+							curr_story_box = curr_story_box + 1;
+							var new_offset = 1000;
+						} else {
+							curr_story_box = curr_story_box - 1;
+							var new_offset = -1000;
+						}
+						
+						if (curr_story_box < 0) {		//check if at beginning
+							curr_story_box = 0;
+							switching_story = false;
+							switch_story = false;
+						}
+						if (curr_story_box >= parseInt(localStorage[curr_cat + '_num']) ) {		//check if on end
+							curr_story_box = parseInt( localStorage[curr_cat + '_num'] ) - 1;
+							switching_story = false;
+							switch_story = false;
+						}
+						
+						
+						if (switching_story) {
+							$('#left_side_content').animate({opacity:0.5}, 100, function() {
+								$('#left_side_content').css('opacity', '1');
+								$('#left_side_content').css('left', new_offset + 'px');
+								
+								//toggle the selection
+								$('#box' + last_story_box).toggleClass("box_selected");
+								$('#box' + curr_story_box).toggleClass("box_selected");
+								
+								var news_story_num =  $('#box' + curr_story_box + '_content .item_num').html();
+								switch_news( $('#box' + news_story_num) );
+								
+								left_side_content_left = left_side_content_left_default;
+								$('#left_side_content').animate({left:left_side_content_left + 'px'}, 300, function() {
+									reset_news_pos();
+									switching_story = false;
+								});
+							});
+						}
+
+					} else {
+						switch_story = false;
+					}
+					
+					var left_side_left = parseInt( $('#left_side_content').css('left') );
+					left_side_left = left_side_content_left + this_dist_x;
+					$('#left_side_content').css('left', left_side_left + 'px');
+				}
+			};
+			
+		};
+		var handle_touch_end = function(e, this_elem) {
+			mouse_down = false;
+			if (this_elem == 'left_side_container') {
+				left_side_content_top = parseInt( $('#left_side_content').css('top') );
+				if ( ! switch_story ) {
+					left_side_content_left = left_side_content_left_default;
+					$('#left_side_content').animate({left:left_side_content_left + 'px'}, 500);	//story didn't change, so return to 0
+				}
+			}
+		}
+		
+		$('#left_side_container').on('touchstart mousedown', function(e) {
+			handle_touch_start(e, 'left_side_container');
+		});
+		$('#left_side_container').on('touchmove mousemove', function(e) {
+			handle_touch_move(e, 'left_side_container');
+		});
+		$('#left_side_container').on('touchend mouseup', function(e) {
+			handle_touch_end(e, 'left_side_container');
+		});
+		</script>
+		
+		
+		
+		<style>
+		.box{
+			border: 2px #666 ridge;
+			border-radius: 10px;
+			width: 260px;
+			color: #CCC;
+			margin-bottom: 15px;
+			padding: 10px;
+			background-image: linear-gradient(bottom, rgb(92,92,92) 0%, rgb(51,51,51) 100%);
+			background-image: -o-linear-gradient(bottom, rgb(92,92,92) 0%, rgb(51,51,51) 100%);
+			background-image: -moz-linear-gradient(bottom, rgb(92,92,92) 0%, rgb(51,51,51) 100%);
+			background-image: -webkit-linear-gradient(bottom, rgb(92,92,92) 0%, rgb(51,51,51) 100%);
+			background-image: -ms-linear-gradient(bottom, rgb(92,92,92) 0%, rgb(51,51,51) 100%);
+			background-image: -webkit-gradient( linear, left bottom, left top, color-stop(0, rgb(92,92,92)), color-stop(1, rgb(51,51,51)) );
+		}
+		.box_selected {
+			border: ridge 2px rgb(160, 216, 226);
+			background: grey;
+		}
+		.box_content {
+			height: 100%;
+			width: 100%;
+		}
+		.box_content .item_num { display: none; }
+		.box_content .item_img {
+			display:none;
+		}
+		.box_content .item_title {
+			font-size: 15px;
+			color:#FFF;
+			padding-bottom: 5px;
+		}
+		.box_content .item_author_container {
+			display: none;
+		}
+		.box_content .item_date_container {
+			display: none;
+		}
+		.box_content .item_blurb { display:none; }
+		.box_content .item_short_date {
+			font-size: 12px;
+			color: #FC6;
+		}
+		#wrapper {
+			position: absolute;
+			top: 137px;
+			right: 10px;
+			width: 295px;
+			height: 622px;
+			overflow: hidden;
+			text-align: center;
+			background: rgba(25, 25, 25, .4);
+			border-radius: 10px;
+			border: inset 1px #368585;
+		}
+		</style>
+		<div id="wrapper">
+			<div id="CatButtons"></div> <!--This is filled in with the boxes by js-->
+		</div>
+		<script>
+		var reset_news_pos = function() {
+			//reset the position of the news content
+			left_side_content_left = left_side_content_left_default;
+			left_side_content_top = left_side_content_top_default;
+			$('#left_side_content').css('left', left_side_content_left + 'px');
+			$('#left_side_content').css('top', left_side_content_top + 'px');
+		};
+		var switch_news = function(box_num) {	//function to change expanded view of touched news box
+			var this_num = $(box_num).find('div.item_num').html();
+			$('#left_side_content').html( localStorage[curr_cat + this_num] );
+		};
+		$('#CatButtons').on( user_event, ".box", function() {	//attach a user event listener onto the boxes that calls "switch_news", done as delegate since .box's are dynamic
+			$('#box' + curr_story_box).toggleClass("box_selected");	//deselect the current box
+			curr_story_box = parseInt( $(this).attr("id").replace("box","") );	//need to update curr_story_box to the current number of the active box
+			$('#box' + curr_story_box).toggleClass("box_selected");	//select the current box
+			if (navStatus == "show") { toggleLeftNav(); }	//close the left navigation bar if it's open
+			reset_news_pos();	//reset the news story position
+			switch_news(this);	//finally switch the news content to the desired story
+		});
+		</script>
+		
+		
+		
+	</div>
+	
+	<script type="text/javascript" src="phonegap.js"></script>
+	<script>
+	var phonegap_loaded = function() {  }
+	document.addEventListener('deviceready', phonegap_loaded(), false);
+	</script>
+	
+	
+	<style>
+	@media screen and (min-aspect-ratio: 1/1) and (min-width:400px) {
+		/* Landscape layout (with min-width) */
+	}
+	
+	/*@media screen and (min-width:480px) and (orientation:portrait) {*/
+    @media screen and (min-device-width:768px) and (orientation:portrait) {
+		/* Portrait layout - iPad */
+		#update_screen { background-image: url('img/splash_portrait.jpg'); }
+		#update_loading { top: 390px; left: 100px; }
+		body { background-image: url("img/bg_por.jpg"); }
+		#mainWrapper {
+			height: 1024px;
+			width: 768px;
+		}
+		#wrapper {
+			width: 700px;
+			top: 765px;
+			height: 251px;
+		}
+		.box { margin-bottom: 5px; }
+		#header_current_category {
+			top: 73px;
+			left: 293px;
+		}
+		#left_side_container {
+			width: 723px;
+			margin-left: 21px;
+		}
+		#left_side_content { width: 703px; }
+		.box {
+			margin-left: 20px;
+			margin-right: 20px;
+		}
+	}
+    /*@media screen and (min-width:320px) and (orientation:portrait) {*/
+	@media screen and (max-device-width:480px) and (orientation:portrait) {
+		/* Portrait layout - iPhone */
+		#logo_img {
+			width: 100px !important;
+			padding-left: 60px;
+			padding-top: 24px;
+		}
+		#mainWrapper {
+			height: 100%;
+			width: 100%;
+		}
+		#logo_powered { top: 28px; }
+		#logo_powered img { width: 160px; }
+		#header_current_category {
+			left: 17px;
+			top: 77px;
+		}
+		#left_side_container {
+			top: 100px;
+			margin-left: 2%;
+			width: 96%;
+			height: calc(100% - 106px) !important;
+		}
+		#left_side_content {
+			width: 93%;
+		}
+		#left_side_content .item_img img { width: 100%; }
+		#wrapper {
+			display: none !important;
+			left: 2%;
+			width: 96%;
+			top: inherit;
+			bottom: 0px;
+			height: 82px;
+		}
+		.cat_img { display: none; }
+        #modal_about {
+            width: 90%;
+            height: 80%;
+            padding: 2%;
+            top: 40px !important;
+        }
+        #about_us_close_button { display: none; }
+        .about_us_extra { display: none; }
+        }
+	}
+	</style>
+	<script>
+	content_container_height = parseInt( $('#left_side_container').css('height') );
+	</script>
+	
+</body>
+</html>
